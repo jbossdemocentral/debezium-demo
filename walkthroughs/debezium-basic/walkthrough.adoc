@@ -47,7 +47,7 @@ The first step is to start a MySQL command line client in the tooling terminal s
  
 === Access the tooling terminal
 
-. Open a new browser tab and go to the link:{openshift-console-url}[topology view]
+. Open a new browser tab and go to the link:{openshift-console-url}[topology view, window="_blank"]
 +
 [NOTE]
 ====
@@ -171,9 +171,7 @@ The `kafkacat` utility returns the event records from the `customers` table. The
 +
 You should see output similar to the following:
 +
-[source,bash,subs="attributes+"]
-----
-% Auto-selecting Consumer mode (use -P or -C to override)
+[literal]
 {
   "schema": {
     "type": "struct",
@@ -182,14 +180,15 @@ You should see output similar to the following:
         "type": "struct",
         "fields": [
 ...
+        ]
+      }
+      ]
     },
     "op": "c",
     "ts_ms": 1594158476924,
     "transaction": null
   }
 }
-% Reached end of topic dbserver-mysql.inventory.customers [0] at offset 4
-----
 +
 [NOTE]
 ====
@@ -689,8 +688,8 @@ Use the MySQL command line client to add, modify, and remove rows in the databas
 ====
 You can install Debezium in OpenShift or on Red Hat Enterprise Linux. For more information, see the following:
 
-- link:https://access.redhat.com/documentation/en-us/red_hat_integration/2020-Q2/html-single/installing_change_data_capture_on_openshift/[Installing Debezium on OpenShift]
-- link:https://access.redhat.com/documentation/en-us/red_hat_integration/2020-Q2/html-single/installing_change_data_capture_on_rhel/[Installing Debezium on RHEL]
+- link:https://access.redhat.com/documentation/en-us/red_hat_integration/2020-Q2/html-single/installing_change_data_capture_on_openshift/[Installing Debezium on OpenShift, window="_blank"]
+- link:https://access.redhat.com/documentation/en-us/red_hat_integration/2020-Q2/html-single/installing_change_data_capture_on_rhel/[Installing Debezium on RHEL, window="_blank"]
 ====
 
 // <-- END OF SOLUTION PATTERN TASKS -->
