@@ -171,7 +171,8 @@ The `kafkacat` utility returns the event records from the `customers` table. The
 +
 You should see output similar to the following:
 +
-[literal]
+[source,json,subs="attributes+"]
+----
 {
   "schema": {
     "type": "struct",
@@ -189,6 +190,7 @@ You should see output similar to the following:
     "transaction": null
   }
 }
+----
 +
 [NOTE]
 ====
@@ -201,7 +203,7 @@ The event’s value shows that the row was created, and describes what it contai
 +
 Here are the details of the _value_ of the last event (formatted for readability):
 +
-[source,bash,subs="attributes+"]
+[source,json,subs="attributes+"]
 ----
 {
   "schema": {

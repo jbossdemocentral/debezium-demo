@@ -1,8 +1,6 @@
 {
     "dependencies": {
-        "managedServices": [
-        ],
-        "templates": [
-        ]
+        "managedServices": [],
+        "templates": []
     }
 }
