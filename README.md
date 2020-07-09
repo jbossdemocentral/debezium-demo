@@ -14,6 +14,7 @@ Developers, Architects, Data Integrators
 - Red Hat Integration
   - Debezium
   - AMQ Streams
+- Camel Kafka Connectors
 
 ### Duration
 
