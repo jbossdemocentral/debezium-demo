@@ -33,8 +33,6 @@ image::images/debezium-basic-topology.png[Debezium, role="integr8ly-img-responsi
 .Red Hat OpenShift
 ****
 * link:{openshift-console-url}[Console, window="_blank"]
-* link:https://docs.openshift.com/dedicated/4/welcome/index.html/[OpenShift Documentation, window="_blank"]
-* link:https://blog.openshift.com/[OpenShift Blog, window="_blank"]
 ****
 // <-- END OF SOLUTION PATTERN GENERAL INFO -->
 
@@ -73,7 +71,6 @@ mycli -h mysql -u mysqluser -p mysqlpw inventory
 +
 You should see output similar to the following:
 +
-[source,bash,subs="attributes+"]
 ----
 mysql 5.7.30-log
 mycli 1.20.1
@@ -93,7 +90,6 @@ show tables;
 +
 You will get the following output:
 +
-[source,bash,subs="attributes+"]
 ----
 +---------------------+
 | Tables_in_inventory |
@@ -118,7 +114,6 @@ SELECT * FROM customers;
 +
 You should see:
 +
-[source,bash,subs="attributes+"]
 ----
 +------+------------+-----------+-----------------------+
 | id   | first_name | last_name | email                 |
@@ -171,7 +166,6 @@ The `kafkacat` utility returns the event records from the `customers` table. The
 +
 You should see output similar to the following:
 +
-[source,json,subs="attributes+"]
 ----
 {
   "schema": {
@@ -203,7 +197,6 @@ The event’s value shows that the row was created, and describes what it contai
 +
 Here are the details of the _value_ of the last event (formatted for readability):
 +
-[source,json,subs="attributes+"]
 ----
 {
   "schema": {
@@ -418,7 +411,6 @@ Here are the details of the _value_ of the last event (formatted for readability
 
 . Compare the event’s _key_ and _value_ schemas to the state of the `inventory` database.
 +
-[source,bash,subs="attributes+"]
 ----
 mysql mysqluser@mysql:inventory> select * from customers; 
 +------+------------+-----------+-----------------------+
@@ -468,7 +460,6 @@ SELECT * FROM customers;
 +
 You should get the updated version:
 +
-[source,bash,subs="attributes+"]
 ----
 +------+------------+-----------+-----------------------+
 | id   | first_name | last_name | email                 |
@@ -496,7 +487,6 @@ By changing a record in the `customers` table, the Debezium MySQL connector gene
 +
 Here is that new event’s _value_. There are no changes in the `schema` section, so only the `payload` section is shown (formatted for readability):
 +
-[source,bash,subs="attributes+"]
 ----
 ...
   "payload": {
@@ -592,7 +582,6 @@ kafkacat -b demo-kafka-bootstrap:9092 -t dbserver-mysql.inventory.customers -K \
 +
 Here are the details of the _value_ for the first new event (formatted for readability):
 +
-[source,json,subs="attributes+"]
 ----
 {
 ...
@@ -638,7 +627,6 @@ This event provides a consumer with the information that it needs to process the
 +
 Here is the _key_ for the second new event (formatted for readability):
 +
-[source,json,subs="attributes+"]
 ----
 {
   "schema": {
