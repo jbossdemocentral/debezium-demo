@@ -485,7 +485,7 @@ Now that we verified that the Apache Camel Kafka Connector is running in the Kaf
 }
 ----
 
-=== Do a index search
+=== Do an index search
 
 Time to execute a search on the index to retrieve all the records available. 
 
@@ -611,12 +611,6 @@ Is the information the same we entered in the app?
 ----
 
 . Notice that this time we got a total of *1001* hits!
-
-[type=verification]
-Is the information the same we entered in the app?
-
-[type=verificationFail]
-{standard-fail-text}
 
 === Search the for Cherry
 
