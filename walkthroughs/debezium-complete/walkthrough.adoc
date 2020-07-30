@@ -51,6 +51,8 @@ It’s now time to test the Change Data Capture integration.
 - We will first load the CSV data into MSSQL using a PHP app
 - Debezium will populate data from MSSQL into the Kafka topic
 
+image::images/debezium-complete-cdc.png[Data replication - CDC]
+
 === Loading Orders File
 
 Debezium’s SQL Server Connector can monitor and record the row-level changes in the schemas of a SQL Server database.
@@ -155,7 +157,14 @@ This an alternative way to search for resources in the OpenShift developer conso
 
 . This will display the topics on the _Kafka cluster_. You should be able to locate your `debezium-cluster*` as well as the `mssql-server-linux.dbo.orders--*` _KafkaTopics_.
 +
+--
 image::images/openshift-cdc-topics.png[CDC KafkaTopics]
+
+[NOTE]
+====
+Don't worry for that awful long name! The GUID generated is only for the OpenShift custom resource management, the *actual* _topic name_ will be something more friendly.
+====
+--
 
 [type=verification]
 Were you able to see that your Change Data Capture connector has access to Kafka?
@@ -268,7 +277,7 @@ image::images/openshift-camel-connector.png[Camel Connector]
 +
 image::images/openshift-connector-detail.png[Connector Detail]
 
-. You should notice the CR spec containing the following configuration:
+. You should notice the CR *spec:* containing the following configuration:
 +
 ----
   class: >-
@@ -284,9 +293,406 @@ image::images/openshift-connector-detail.png[Connector Detail]
   tasksMax: 1
 ----
 
+. Check the configuration. It includes the required camel lines to make the component work adding endpoint fields like the `hostname`, `indexName` and `operation`. In our case, we will index all the _orders_ coming from the database.
+
+. Scroll down to check the status of the Connector. It should look like this:
++
+----
+status:
+  conditions:
+    - lastTransitionTime: '2020-07-30T17:03:55.382Z'
+      status: 'True'
+      type: Ready
+  connectorStatus:
+    connector:
+      state: RUNNING
+      worker_id: '10.131.0.32:8083'
+    name: camel-connector
+    tasks:
+      - id: 0
+        state: RUNNING
+        worker_id: '10.131.0.32:8083'
+    type: sink
+  observedGeneration: 1
+----
+
+. This section of the *KafkaConnector* resource gives us information on the state of the connector. You can also get this information by querying the REST API from the Kafka Connet cluster. If everything is fine, the connector should have 1 task and it should be in `state: RUNNING`.
+
 [type=verification]
-Were you able to see the debezium record with the same information from the database insert?
+Is the connector in the correct state?
 
 [type=verificationFail]
 {standard-fail-text}
+
+=== Review the connector log
+
+. Go back to the link:{openshift-console-url}[topology view, window="_blank"]
+
+. Click on the `camel-connect` circle under _strimzi-camel_ cluster. Then click on *resources* and finally on the *pod* name to access the running Kafka Connect container.
++
+image::images/openshift-camel-connect.png[Kafka Connect Camel]
+
+. When in the pod details, click on the *Logs* tab to access the container log.
++
+image::images/openshift-camel-log.png[Kafka Connect Camel]
+
+. You should be able to see that the Apache Camel route started successfully. Search for some lines similar to these:
++
+----
+2020-07-30 17:03:55,486 INFO Setting initial properties in Camel context: [{connector.class=org.apache.camel.kafkaconnector.elasticsearchrest.CamelElasticsearchrestSinkConnector, camel.sink.endpoint.operation=Index, camel.sink.path.clusterName=elasticsearch, camel.sink.component=elasticsearch-rest, task.class=org.apache.camel.kafkaconnector.elasticsearchrest.CamelElasticsearchrestSinkTask, topics=mssql-server-linux.dbo.Orders, tasks.max=1, camel.sink.endpoint.indexName=orders, camel.sink.endpoint.hostAddresses=elasticsearch:9200, name=camel-connector, value.converter=org.apache.kafka.connect.storage.StringConverter, key.converter=org.apache.kafka.connect.storage.StringConverter}] (org.apache.camel.kafkaconnector.utils.CamelMainSupport) [task-thread-camel-connector-0]
+2020-07-30 17:03:55,506 INFO Creating Camel route from(direct:start).to(elasticsearch-rest:elasticsearch?hostAddresses=elasticsearch:9200&indexName=orders&operation=Index) (org.apache.camel.kafkaconnector.utils.CamelMainSupport) [task-thread-camel-connector-0]
+2020-07-30 17:03:55,520 INFO Starting CamelContext (org.apache.camel.kafkaconnector.utils.CamelMainSupport) [task-thread-camel-connector-0]
+2020-07-30 17:03:55,523 INFO Using properties from: classpath:application.properties;optional=true (org.apache.camel.main.BaseMainSupport) [pool-3-thread-1]
+2020-07-30 17:03:55,538 INFO No additional Camel XML routes discovered from: classpath:camel/*.xml (org.apache.camel.main.DefaultRoutesCollector) [pool-3-thread-1]
+2020-07-30 17:03:55,539 INFO No additional Camel XML rests discovered from: classpath:camel-rest/*.xml (org.apache.camel.main.DefaultRoutesCollector) [pool-3-thread-1]
+2020-07-30 17:03:55,613 INFO Apache Camel 3.3.0 (CamelContext: camel-1) is starting (org.apache.camel.impl.engine.AbstractCamelContext) [pool-3-thread-1]
+2020-07-30 17:03:55,614 INFO StreamCaching is not in use. If using streams then its recommended to enable stream caching. See more details at http://camel.apache.org/stream-caching.html (org.apache.camel.impl.engine.AbstractCamelContext) [pool-3-thread-1]
+2020-07-30 17:03:55,620 INFO Connecting to the ElasticSearch cluster: elasticsearch (org.apache.camel.component.elasticsearch.ElasticsearchProducer) [pool-3-thread-1]
+2020-07-30 17:03:55,759 INFO Route: route1 started and consuming from: direct://start (org.apache.camel.impl.engine.AbstractCamelContext) [pool-3-thread-1]
+2020-07-30 17:03:55,760 INFO Total 1 routes, of which 1 are started (org.apache.camel.impl.engine.AbstractCamelContext) [pool-3-thread-1]
+2020-07-30 17:03:55,760 INFO Apache Camel 3.3.0 (CamelContext: camel-1) started in 0.147 seconds (org.apache.camel.impl.engine.AbstractCamelContext) [pool-3-thread-1]
+2020-07-30 17:03:55,761 INFO CamelContext started (org.apache.camel.kafkaconnector.utils.CamelMainSupport) [task-thread-camel-connector-0]
+2020-07-30 17:03:55,761 INFO CamelSinkTask connector task started (org.apache.camel.kafkaconnector.CamelSinkTask) [task-thread-camel-connector-0]
+----
+
+[type=verification]
+Did the connector started successfully?
+
+[type=verificationFail]
+{standard-fail-text}
+// <-- END OF SOLUTION PATTERN TASKS -->
+
+// <-- START OF SOLUTION PATTERN TASKS -->
+[time=5]
+[id='index-result']
+== Check the indexed data on Elasticsearch
+
+Now that we verified that the Apache Camel Kafka Connector is running in the Kafka Connect cluster is time to take a look at the Eleasticsearch REST API to check if our data was successfully indexed.
+
+[type=taskResource]
+.Useful Resources
+****
+* link:https://raw.githubusercontent.com/RedHatWorkshops/dayinthelife-streaming/master/support/module-1/earth-orders.csv[Multiple Orders File Download, window="_blank"]
+* link:https://www-php-app-debezium-complete-demo.{openshift-app-host}[Legacy System Application, window="_blank"]
+****
+
+=== Review the index information
+
+. In a new browser tab access the Elasticsearch index link:http://elastic-debezium-complete-demo.{openshift-app-host}/orders[REST endpoint].
+
+. You should be able to retrieve a json objet with the information on the _mapping properties_ of our *orders*. It should look like the following (formatted for better view):
++
+----
+{
+  "orders": {
+    "aliases": {},
+    "mappings": {
+      "properties": {
+        "OrderId": {
+          "type": "long"
+        },
+        "OrderItemName": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "OrderType": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "OrderUser": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "Price": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "Quantity": {
+          "type": "long"
+        },
+        "ShipmentAddress": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "ZipCode": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "__op": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "__table": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        }
+      }
+    },
+    "settings": {
+      "index": {
+        "creation_date": "1596135798546",
+        "number_of_shards": "1",
+        "number_of_replicas": "1",
+        "uuid": "1k0svQD0R6iOrGQBgK2LgA",
+        "version": {
+          "created": "7030099"
+        },
+        "provided_name": "orders"
+      }
+    }
+  }
+}
+----
+
+=== Do a index search
+
+Time to execute a search on the index to retrieve all the records available. 
+
+. Append the following to the URL path: `/_search` and hit enter.
+
+. The result should appear in the browser window. It should look like this (formatted for better view):
++
+----
+{
+  "took": 41,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 1,
+      "relation": "eq"
+    },
+    "max_score": 1,
+    "hits": [
+      {
+        "_index": "orders",
+        "_type": "_doc",
+        "_id": "OcsboXMBOET50gSsdxHl",
+        "_score": 1,
+        "_source": {
+          "OrderId": 1,
+          "OrderType": "E",
+          "OrderItemName": "Lime",
+          "Quantity": 100,
+          "Price": "3.69",
+          "ShipmentAddress": "541-428 Nulla Avenue",
+          "ZipCode": "4286",
+          "OrderUser": "demo",
+          "__op": "c",
+          "__table": "Orders"
+        }
+      }
+    ]
+  }
+}
+----
+
+[type=verification]
+Is the information the same we entered in the app?
+
+[type=verificationFail]
+{standard-fail-text}
+
+=== Load more orders
+
+. Get back to the legacy link:https://www-php-app-debezium-complete-demo.{openshift-app-host}[Enterprise System, window="_blank"].
++
+image:images/www-main.png[Main Application]
+
+. Download to your local system the link:https://raw.githubusercontent.com/RedHatWorkshops/dayinthelife-streaming/master/support/module-1/earth-orders.csv[Mutiple Orders File, window="_blank"].
+
+. Load the file into the application. This should load another *1000 orders* into the system.
++
+image:images/www-load-multiple-file.png[Main Application]
+
+. Wait a few seconds for the information to load. If this is successfully completed, you will see the CSV data on the *Imported Orders* page.
++
+--
+image:images/www-imported-multiple-orders.png[Main Application]
+
+[TIP]
+=====
+You can follow the previous steps to check the data in the database and the kafka topic.
+=====
+--
+
+[type=verification]
+Is the information the same we entered in the app?
+
+[type=verificationFail]
+{standard-fail-text}
+
+=== Search the Orders
+
+. Get back to the browser tab where you have the `/_search` URL and refresh it. You should get now all the records. It should look like this (formatted for better view):
++
+----
+{
+  "took": 412,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 1001,
+      "relation": "eq"
+    },
+    "max_score": 1,
+    "hits": [
+      {
+        "_index": "orders",
+        "_type": "_doc",
+        "_id": "OcsboXMBOET50gSsdxHl",
+        "_score": 1,
+        "_source": {
+          "OrderId": 1,
+          "OrderType": "E",
+          "OrderItemName": "Lime",
+          "Quantity": 100,
+          "Price": "3.69",
+          "ShipmentAddress": "541-428 Nulla Avenue",
+          "ZipCode": "4286",
+          "OrderUser": "demo",
+          "__op": "c",
+          "__table": "Orders"
+        }
+      },
+...
+----
+
+. Notice that this time we got a total of *1001* hits!
+
+[type=verification]
+Is the information the same we entered in the app?
+
+[type=verificationFail]
+{standard-fail-text}
+
+=== Search the for Cherry
+
+Let's filter by one of the fields. Let's search for all the orders that are `Cherry` flavored by searching the `OrderItemName`.
+
+. Append the following query detail to the URL `?q=OrderItemName:Cherry` and hit enter.
+
+. You should get the response for the query with the cherry flavored results. It should look like this (formatted for better view):
++
+----
+{
+  "took": 26,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 34,
+      "relation": "eq"
+    },
+    "max_score": 3.9419897,
+    "hits": [
+      {
+        "_index": "orders",
+        "_type": "_doc",
+        "_id": "QctToXMBOET50gSsUxFM",
+        "_score": 3.9419897,
+        "_source": {
+          "OrderId": 9,
+          "OrderType": "E",
+          "OrderItemName": "Cherry",
+          "Quantity": 140,
+          "Price": "4.42",
+          "ShipmentAddress": "Ap #781-1741 Sem. St.",
+          "ZipCode": "130336",
+          "OrderUser": "demo",
+          "__op": "c",
+          "__table": "Orders"
+        }
+      },
+...
+----
+
+As you can see now we just have *34* orders for Cherry. You can try to search for other fields on your own.
+
+Congratulations you successfully replicated some data from your legacy application into an indexing service using Red Hat Integration with Debezium, Apache Kafka and Apache Camel!
+
+[type=verification]
+Did you get the same results?
+
+[type=verificationFail]
+{standard-fail-text}
+
+// <-- END OF SOLUTION PATTERN TASKS -->
+
+// <-- START OF SOLUTION PATTERN TASKS -->
+[time=5]
+[id='summary']
+== Summary
+
+After completing the tutorial, consider the following next steps:
+
+- Explore the tutorial further.
++
+Use the MySQL command line client to add, modify, and remove rows in the database tables, and see the effect on the topics. Keep in mind that you cannot remove a row that is referenced by a foreign key.
+
+- Plan a Debezium deployment.
++
+====
+You can install Debezium in OpenShift or on Red Hat Enterprise Linux. For more information, see the following:
+
+- link:https://access.redhat.com/documentation/en-us/red_hat_integration/2020-Q2/html-single/installing_change_data_capture_on_openshift/[Installing Debezium on OpenShift, window="_blank"]
+- link:https://access.redhat.com/documentation/en-us/red_hat_integration/2020-Q2/html-single/installing_change_data_capture_on_rhel/[Installing Debezium on RHEL, window="_blank"]
+====
+
 // <-- END OF SOLUTION PATTERN TASKS -->
