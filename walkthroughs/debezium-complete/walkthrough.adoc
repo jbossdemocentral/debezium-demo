@@ -374,11 +374,12 @@ Now that we verified that the Apache Camel Kafka Connector is running in the Kaf
 ****
 * link:https://raw.githubusercontent.com/RedHatWorkshops/dayinthelife-streaming/master/support/module-1/earth-orders.csv[Multiple Orders File Download, window="_blank"]
 * link:https://www-php-app-debezium-complete-demo.{openshift-app-host}[Legacy System Application, window="_blank"]
+* link:http://elastic-debezium-complete-demo.{openshift-app-host}/orders[Elasticsearch REST endpoint, window="_blank"]
 ****
 
 === Review the index information
 
-. In a new browser tab access the Elasticsearch index link:http://elastic-debezium-complete-demo.{openshift-app-host}/orders[REST endpoint].
+. In a new browser tab access the Elasticsearch index link:http://elastic-debezium-complete-demo.{openshift-app-host}/orders[REST endpoint, window="_blank"].
 
 . You should be able to retrieve a json objet with the information on the _mapping properties_ of our *orders*. It should look like the following (formatted for better view):
 +
