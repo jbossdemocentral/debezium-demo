@@ -42,7 +42,7 @@ image::images/debezium-complete-es.png[Data replication - Elasticsearch]
 [type=taskResource]
 .Useful Resources
 ****
-* link:https://raw.githubusercontent.com/RedHatWorkshops/dayinthelife-streaming/master/support/module-1/single-order.csv[Single Order File Download, window="_blank"]
+* link:https://raw.githubusercontent.com/RedHat-Middleware-Workshops/dayinthelife-streaming/master/support/module-2/single-order.csv[Single Order File Download, window="_blank"]
 * link:https://www-php-app-debezium-complete-demo.{openshift-app-host}[Legacy System Application, window="_blank"]
 ****
 
@@ -59,7 +59,7 @@ Debezium’s SQL Server Connector can monitor and record the row-level changes i
 
 The functionality of the connector is based upon the change data capture feature provided by SQL Server Standard (since SQL Server 2016 SP1) or Enterprise edition.
 
-. Download to your local system the link:https://raw.githubusercontent.com/RedHatWorkshops/dayinthelife-streaming/master/support/module-1/single-order.csv[Single Order File, window="_blank"].
+. Download to your local system the link:https://raw.githubusercontent.com/RedHat-Middleware-Workshops/dayinthelife-streaming/master/support/module-2/single-order.csv[Single Order File, window="_blank"].
 
 . Navigate to the legacy PHP link:https://www-php-app-debezium-complete-demo.{openshift-app-host}[Enterprise System, window="_blank"] in a new browser tab.
 +
@@ -372,7 +372,7 @@ Now that we verified that the Apache Camel Kafka Connector is running in the Kaf
 [type=taskResource]
 .Useful Resources
 ****
-* link:https://raw.githubusercontent.com/RedHatWorkshops/dayinthelife-streaming/master/support/module-1/earth-orders.csv[Multiple Orders File Download, window="_blank"]
+* link:https://raw.githubusercontent.com/RedHat-Middleware-Workshops/dayinthelife-streaming/master/support/module-2/earth-orders.csv[Multiple Orders File Download, window="_blank"]
 * link:https://www-php-app-debezium-complete-demo.{openshift-app-host}[Legacy System Application, window="_blank"]
 * link:http://elastic-debezium-complete-demo.{openshift-app-host}/orders[Elasticsearch REST endpoint, window="_blank"]
 ****
