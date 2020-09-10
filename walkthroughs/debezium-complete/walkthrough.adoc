@@ -545,7 +545,7 @@ Is the information the same we entered in the app?
 +
 image:images/www-main.png[Main Application]
 
-. Download to your local system the link:https://raw.githubusercontent.com/RedHatWorkshops/dayinthelife-streaming/master/support/module-1/earth-orders.csv[Mutiple Orders File, window="_blank"].
+. Download to your local system the link:https://raw.githubusercontent.com/RedHat-Middleware-Workshops/dayinthelife-streaming/master/support/module-2/earth-orders.csv[Mutiple Orders File, window="_blank"].
 
 . Load the file into the application. This should load another *1000 orders* into the system.
 +
