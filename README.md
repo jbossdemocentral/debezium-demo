@@ -1,60 +1,75 @@
-# Change Data Capture with Debezium Demos
+# Change data capture with Debezium demos
 
 ## Introduction
 
-This demo consists of 3 scenarios that you can use to demonstrate the Change Data Capture (CDC) capabilities of Red Hat Integration with Debezium, Apache Kafka and Apache Camel Kafka Connectors.
+This demo consists of a set of scenarios that you can use to demonstrate the change data capture (CDC) capabilities of Red Hat Integration with Debezium, Apache Kafka, and Apache Camel Kafka Connectors.
 
 ### Audience
 
-Developers, Architects, Data Integrators
+- Developers
+- Architects
+- Data Integrators
 
-### Products and Projects
+### Products and projects
 
 - Red Hat OpenShift
 - Red Hat Integration
   - Debezium
   - AMQ Streams
-- Camel Kafka Connectors
+- Apache Camel Kafka Connectors
 
 ### Duration
 
-Each basic scenario should be able to be completed in between 10-20 minutes. The advanced scenario depends on the features to demonstrate.
+The basic scenarios can be completed in 25 - 30 minutes. The time to complete the advanced scenario depends on the features that you want to demonstrate.
 
-### Provisioning Time
+## Deployment
 
-This workshop should be available after 60-75 minutes. It could fortuitously fail in the deployment, please just try again as it could be fixed already. If take more than 3 attempts, please do send an email to raise a ticket to: rhds-help@redhat.com
-Relevant information is sent in the final email
+To deploy the demos, request the **Change Data Capture with Debezium** workshop from the [Red Hat Product Demo System (RHPDS)](https://rhpds.redhat.com).
+
+### Provisioning time
+
+Workshop provisioning takes 60 - 75 minutes. 
+
+If the workshop fails to deploy, resubmit your provisioning request. If deployment continues to fail after three attempts, open a ticket by sending a message to rhds-help@redhat.com.
+
+After your provisioning request is received, the _Red Hat Product Demo System_ sends you a series of email messages with updates about the status of the request. When your deployment is ready for use, you receive a final email that includes information about how to access the environment. 
 
 ## Scenarios
 
-### Introducing Debezium
+### Introduction to Debezium
 
-In this scenario you are capturing events from a mysql database to Apache Kafka. You can go over the data structure of the event for each of the possible changes in the database: create, update and delete. 
+In this introductory scenario, you use Debezium to capture data change events from a MySQL database and send change event records to Apache Kafka. You can go over the data structure for each type of event record: creates, updates, and deletes. 
 
-This is a basic demo where everything is already set up for you to go over the solution pattern from the solution explorer web application.
+This is a basic demo where everything is already set up for you to go over the solution pattern from the Solution Explorer web application.
 
 #### Video
 
-### Data Replication
+### Data replication
 
-The second scenario covers how to avoid dual writes. You have a legacy PHP application that needs to update an Elasticsearch index with the new orders captured for future search. The CDC part is covered with Debezium connectors and includes the use of Single Message Transformations The second part consists of the deployment of the new Camel Kafka Connectors.
+The data replication scenario demonstrates how to use Debezium to avoid dual writes. In the scenario, you have a legacy enterprise application built on PHP, that sends orders and records into a database. To enable faster querying of your orders, you want to  send the records for each new order event to an Elasticsearch index. 
 
-This is a basic demo where everything is already set up for you to go over the solution pattern from the solution explorer web application
+The scenario makes use of Debezium connectors and Single Message Transformations (SMTs). The second part of the demo introduces the new Camel Kafka Connectors.
+
+The components used in this scenario are deployed in the Solution Explorer, and are ready for you to use.
 
 #### Video
 
 [![](https://i.ytimg.com/vi/LVizd46AD_Q/hqdefault.jpg?sqp=-oaymwEZCPYBEIoBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCLbGoabBwtHlxtWbdL9slZ0I-Oug)](https://www.youtube.com/watch?v=LVizd46AD_Q)
 
-### Advanced Demonstrations
-The third scenario can be used to demonstrate advanced configurations and requirements for Debezium. 
+### Advanced demonstrations
+Use the advanced demo to explore advanced configurations and requirements for Debezium. The advanced demo makes use of an OpenShift project that is available in the same cluster as the two preceding demo scenarios. The cluster has the following components deployed:
 
-This is an advanced demo where there are only a base postgresql and mongodb deployments as well as a kafka cluster. You can use it to show how to configure the database for CDC, how to deploy a Kafka Connect cluster using AMQ Streams and how to configure a connector either using the REST API or the OpenShift Custom Resource Definition.
+- A base PostgreSQL database
+- A MongoDB database
+- A Kafka cluster
+
+The advanced demonstration does not follow a set script. You can use the components that are available in the project in any way that you want. For example, you might try out some of the following tasks:
+
+- Configure databases for Debezium.
+- Deploy a Kafka Connect cluster using AMQ Streams.
+- Configure a connector by using the REST API, or by the OpenShift Custom Resource Definition (CRD).
 
 #### Video
 
-## Deployment
-
-The easiest way to deploy this demos is to request it from [Red Hat Product Demo System (RHPDS)](https://rhpds.redhat.com).
-
-### Support & Ownership
-Feel free to ask [Hugo Guerrero](https://github.com/hguerrero) if you need some support when there are any questions left or if you need some support.
+### Support and ownership
+If you have any questions or are in need of support, reach out to [Hugo Guerrero](https://github.com/hguerrero).
