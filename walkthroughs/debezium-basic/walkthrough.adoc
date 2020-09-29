@@ -498,21 +498,26 @@ Time: 0.011s
 
 === Reviewing the Kafka record
 
-. Switch back to the terminal running `kafkacat` and re-run the last command (press Ctrl + C to stop the current one):
+. Switch back to the terminal running `kafkacat`.
+. Press Ctrl+C to stop the current command.
+. Re-run the command that you ran in the preceding task:
 +
 [source,bash,subs="attributes+"]
 ----
 kafkacat -b demo-kafka-bootstrap:9092 -t dbserver-mysql.inventory.customers -e | jq .
 ----
 +
-By changing a record in the `customers` table, the Debezium MySQL connector generated a new event. You should see two new JSON documents: one for the event’s _key_, and one for the new event’s _value_.
+Because we modified a row in the `customers` table, the Debezium MySQL connector generated a new event. 
+The output from `kafkacat` shows two new JSON documents: one for the event’s _key_, and one for the new event’s _value_.
 +
-Here is that new event’s _value_. There are no changes in the `schema` section, so only the `payload` section is shown (formatted for readability):
+We won't spend time reviewing the `schema` section, because there are no changes there.
+But let's take a closer look at the following `payload` section in the _value_ document:
 +
+[source,json]
 ----
 ...
   "payload": {
-    "before": {
+    "before": { <1>
       "id": 1004,
       "first_name": "Anne",
       "last_name": "Kretchmar",
@@ -547,17 +552,15 @@ Here is that new event’s _value_. There are no changes in the `schema` section
 }
 ----
 +
-[NOTE]
-====
-The `before` field now has the state of the row with the values _before_ the database commit.
-====
+<1> Recall that in the previous task, the value in the `before` field was `null`. 
+Now, because we updated the row, the `before` field shows the previous state of that row, that is, the original value of `Ann Kretchmar`.
 
 By viewing the `payload` section, you can learn several important things about the _update_ event:
 
 - By comparing the `before` and `after` structures, you can determine what actually changed in the affected row because of the commit.
 - By reviewing the `source` structure, you can find information about MySQL’s record of the change (providing traceability).
 - By comparing the `payload` section of an event to other events in the same topic (or a different topic), you can determine whether the event occurred before, after, or as part of the same MySQL commit as another event.
-
+//What are we comparing? The timestamp?
 [type=verification]
 ====
 Did it work?
@@ -572,11 +575,11 @@ Did it work?
 [id='viewing-delete-event']
 == Deleting a record in the database and viewing the _delete_ event
 
-Now that you have seen how the Debezium MySQL connector captured the _create_ and _update_ events in the `inventory` database, you will now delete one of the records and see how the connector captures it.
+Now that we've seen how the Debezium MySQL connector captures _create_ and _update_ events in the `inventory` database, let's delete a record and see how the connector captures it.
 
 === Deleting a customer and addresses
 
-. In the terminal that is running the MySQL command line client, run the following statements:
+. In the terminal that is running the MySQL command line client, enter the following SQL queries, and type `y` to confirm the operations when prompted:
 +
 [source,bash,subs="attributes+"]
 ----
@@ -584,16 +587,16 @@ DELETE FROM addresses WHERE customer_id=1004;
 DELETE FROM customers WHERE id=1004;
 ----
 +
-[NOTE]
-====
-You will need to type `y` to proceed for each statement.
-====
-+
-By deleting a row in the `customers` table, the Debezium MySQL connector generated two new events.
+Because we deleted a row in the `customers` table, the Debezium MySQL connector generated two new events:
 
-=== Review the Kafka record
+* A record that represents the DELETE operation (`op : d`), the `before` row data, and some other fields.
+* A _tombstone_ record that has the same key as the deleted row, and a value of null. 
+This record is a marker for Apache Kafka. 
+It indicates that log compaction can remove all records that have this key.
 
-. Switch back to the terminal running `kafkacat` and the following command:
+=== Reviewing the Kafka record
+
+. Return to the terminal that is running `kafkacat`, and enter the following command:
 +
 [source,bash,subs="attributes+"]
 ----
@@ -602,13 +605,14 @@ kafkacat -b demo-kafka-bootstrap:9092 -t dbserver-mysql.inventory.customers -K \
 
 . Review the _value_ for the first new event.
 +
-Here are the details of the _value_ for the first new event (formatted for readability):
+Here are the details of the _value_ for the first new event, formatted for readability:
 +
+[source,json]
 ----
 {
 ...
   "payload": {
-    "before": {
+    "before": { <1>
       "id": 1004,
       "first_name": "Anne Marie",
       "last_name": "Kretchmar",
@@ -638,17 +642,18 @@ Here are the details of the _value_ for the first new event (formatted for reada
 }
 ----
 +
-[NOTE]
-====
-The `before` field now has the state of the row that was deleted with the database commit.
+<1> The `before` field shows the state of the row that we deleted, before we committed the deletion.
+<2> The `after` field shows a null value. 
 
-This event provides a consumer with the information that it needs to process the removal of the row. The old values are also provided, because some consumers might require them to properly handle the removal.
-====
+The deletion event provides topic consumers with the information that they need to process the removal of the row. 
+Debezium provides the previous values, because some consumers require them to process the removal.
+
 
 . Review the _key_ and _value_ for the second new event.
 +
-Here is the _key_ for the second new event (formatted for readability):
+Here is the _key_ for the second new event, formatted for readability:
 +
+[source,json]
 ----
 {
   "schema": {
@@ -669,10 +674,13 @@ Here is the _key_ for the second new event (formatted for readability):
 }
 ----
 +
-[NOTE]
-Did you noticed that this time there is no message payload?
+=== No message payload
 
-If Kafka is set up to be _log compacted_, it will remove older messages from the topic if there is at least one message later in the topic with same key. This last event is called a _tombstone_ event, because it has a key and an empty value. This means that Kafka will remove all prior messages with the same key. Even though the prior messages will be removed, the tombstone event means that consumers can still read the topic from the beginning and not miss any events.
+If you configure Kafka to use log compaction, it retains only the last known value for the record keys in a topic partition.
+Older topic records that have the same key are deleted. 
+For deletion events, the event record that is retained -- the last record with the key of the deleted row -- is called a _tombstone_ event.
+Tombstone events have a key and an empty value. 
+The use of tombstone events enables consumers to read a topic from beginning to end and not miss any events, even though event records that precede the tombstone are no longer available. 
 
 [type=verification]
 ====
@@ -693,7 +701,9 @@ After completing the tutorial, consider the following next steps:
 
 - Explore the tutorial further.
 +
-Use the MySQL command line client to add, modify, and remove rows in the database tables, and see the effect on the topics. Keep in mind that you cannot remove a row that is referenced by a foreign key.
+Use the MySQL command line client to add, modify, and remove rows in the database tables. 
+What effects do the operations have on topics? 
+Keep in mind that you cannot remove rows that are referenced by foreign keys.
 
 - Plan a Debezium deployment.
 +
