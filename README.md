@@ -20,7 +20,7 @@ This demo consists of a set of scenarios that you can use to demonstrate the cha
 
 ### Duration
 
-The basic scenarios can be completed in 25 - 30 minutes. The time to complete the advanced scenario depends on the features that you want to demonstrate.
+The basic scenarios can be completed in 25 - 30 minutes. The time to complete the advanced scenario depends on the features that you want to try.
 
 ## Deployment
 
@@ -57,17 +57,20 @@ The components used in this scenario are deployed in the Solution Explorer, and 
 [![](https://i.ytimg.com/vi/LVizd46AD_Q/hqdefault.jpg?sqp=-oaymwEZCPYBEIoBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCLbGoabBwtHlxtWbdL9slZ0I-Oug)](https://www.youtube.com/watch?v=LVizd46AD_Q)
 
 ### Advanced demonstrations
-Use the advanced demo to explore advanced configurations and requirements for Debezium. The advanced demo makes use of an OpenShift project that is available in the same cluster as the two preceding demo scenarios. The cluster has the following components deployed:
+
+Use the advanced demo to explore advanced configurations and requirements for Debezium. 
+To access the environment for the advanced demo, use the **debezium-advanced-demo** OpenShift project. 
+The **debezium-advanced-demo** project has the following components deployed:
 
 - A base PostgreSQL database
-- A MongoDB database
+<!-- - A MongoDB database !-->
 - A Kafka cluster
 
-The advanced demonstration does not follow a set script. You can use the components that are available in the project in any way that you want. For example, you might try out some of the following tasks:
+The advanced demonstration does not follow a set script. You can use the components that are available in the project in any way that you want. For example, try the following tasks:
 
-- Configure databases for Debezium.
 - Deploy a Kafka Connect cluster using AMQ Streams.
-- Configure a connector by using the REST API, or by the OpenShift Custom Resource Definition (CRD).
+- Deploy and configure a Debezium connector for PostgreSQL and you it to send data from the database to Kafka.
+- Configure the connectors by using the REST API, or by using OpenShift Custom Resource Definitions (CRDs).
 
 #### Video
 
