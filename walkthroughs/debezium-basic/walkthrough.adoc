@@ -9,7 +9,7 @@
 
 // attributes
 :title: Introducing Debezium
-:standard-fail-text: Verify that you followed all the steps. If you continue to have issues, contact your administrator.
+:standard-fail-text: Verify that you followed all the steps. If you continue to have problems, contact your administrator.
 
 // id syntax is used here for the custom IDs
 [id='debezium-basic-demo']
