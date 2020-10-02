@@ -115,7 +115,7 @@ image:images/openshift-db-overview.png[Access Pod]
 +
 image:images/openshift-db-terminal.png[Pod Terminal]
 
-. Run the following command to access the SQL Server database:
+. Enter the following command to access the SQL Server database:
 +
 [source,bash,subs="attributes+"]
 ----
@@ -181,7 +181,8 @@ Now let's check to see what information is flowing into Apache Kafka.
 
 . Go back to the link:{openshift-console-url}[topology view, window="_blank"]
 . Verify that you are using the `debezium-complete-demo` project, and that you are using the *Developer* view.
-. From the topology diagram, click the circle for the *tooling* pod to open the overview page, and then click the pod name, for example, `tooling-74c577f6d-89hhh`.
+. From the topology diagram, click the circle for the *tooling* application to open the overview page.
+. Click the *Resources* tab, and then click the pod name, for example, `tooling-74c577f6d-89hhh`.
 +
 image::images/tooling-topology.png[Tooling, role="integr8ly-img-responsive"]
 
@@ -257,16 +258,16 @@ For example, in our scenario, our organization's Order Fulfillment team needs th
 . Go back to the link:{openshift-console-url}[topology view, window="_blank"]
 . Verify that you are using the `debezium-complete-demo` project, and that you are using the *Developer* view.
 . Review the *KafkaConnector* Custom Resource (CR).
-.. Expand the *More* menu on the left menu bar.
+.. Expand the *More* menu in the console menu panel.
 .. Click *Search* to load the resources *Search* page.
-.. Click the *Resources* field, and in the *Select Resource* field, type `kafka`.
+.. Click the *Resources* field, and then type `kafka` in the *Select Resource* field.
 .. From the list of resources, click *KafkaConnector*.
 
 image::images/openshift-search-kafkaconnectors.png[Search KafkaConnectors]
 
 [IMPORTANT]
 ====
-Be sure to click *KafkaConnector* and not *KafkaConnect*. Notice the _or_ at the end of the word.
+Be sure that you click *KafkaConnector* and not *KafkaConnect*. Notice the _or_ at the end of the word.
 ====
 --
 
@@ -321,7 +322,7 @@ status:
   observedGeneration: 1
 ----
 +
-The preceding section of the *KafkaConnector* resource provides information about the state of the connector. 
+The *KafkaConnector* resource in the preceding example provides information about the state of the connector. 
 This same information is also available by querying the REST API from the Kafka Connet cluster. 
 If the connector is working fine, it should have 1 task and the value in the `state` field should be `RUNNING`.
 
@@ -336,7 +337,7 @@ Is the connector in the correct state?
 . Go back to the link:{openshift-console-url}[topology view, window="_blank"]
 
 . In the topology diagram, click the *camel-connect* circle within the *strimzi-camel* cluster to open the overview page. 
-. Click the *Resources* tab and then click the *pod* name to access the running Kafka Connect container.
+. Click the *Resources* tab and then click the pod name to access the running Kafka Connect container.
 +
 image::images/openshift-camel-connect.png[Kafka Connect Camel]
 
@@ -387,10 +388,10 @@ Now that we verified that the Apache Camel Kafka Connector is running in the Kaf
 
 === Reviewing the index information
 
-. In a new browser tab navigate to the Elasticsearch index link:http://elastic-debezium-complete-demo.{openshift-app-host}/orders[REST endpoint, window="_blank"].
-
-. You should be able to retrieve a JSON object with the information on the _mapping properties_ of our *orders*. 
-It should look like the following (formatted for readability):
+. In a new browser tab, navigate to the Elasticsearch index link:http://elastic-debezium-complete-demo.{openshift-app-host}/orders[REST endpoint, window="_blank"].
++ 
+A page loads and retrieves a JSON object with information about the _mapping properties_ of the orders that we submitted to the PHP application. 
+The page displays content that is similar to the following output (formatted for readability):
 +
 [source,json]
 ----
@@ -497,9 +498,9 @@ It should look like the following (formatted for readability):
 
 === Searching the index
 
-Now let's search the index to retrieve all the records available. 
+Now let's search the index to retrieve all of the records that are available. 
 
-. Append the following to the URL path: `/_search` and press Enter.
+. Append the following string to the URL path: `/_search` and press Enter.
 
 . The result that appears in the browser window should look like the following example (formatted here for readability):
 +
@@ -556,7 +557,7 @@ Does the order information match what we imported into our legacy application?
 +
 image:images/www-main.png[Main Application]
 
-. Download to your local system the link:https://raw.githubusercontent.com/RedHat-Middleware-Workshops/dayinthelife-streaming/master/support/module-2/earth-orders.csv[Mutiple Orders File, window="_blank"].
+. Download the link:https://raw.githubusercontent.com/RedHat-Middleware-Workshops/dayinthelife-streaming/master/support/module-2/earth-orders.csv[Mutiple Orders File, window="_blank"], `earth-orders.csv`.
 
 . Load the file into the application. The file loads 1000 more orders into the system.
 +
@@ -569,12 +570,12 @@ image:images/www-imported-multiple-orders.png[Main Application]
 
 [TIP]
 =====
-Refer to the steps to check the data in the database and the kafka topic.
+Refer to the steps in Task 2.1 and 3.1 for the instructions about how to query the database and check the Kafka topic.
 =====
 --
 
 [type=verification]
-Is the information the same we entered in the app?
+Do you see the data from the CSV file that we loaded to the legacy application?
 
 [type=verificationFail]
 {standard-fail-text}
@@ -583,7 +584,8 @@ Is the information the same we entered in the app?
 
 . Return to the browser tab where you have the `/_search` URL and refresh it. 
 Elasticsearch now returns all of the records. 
-It should look like this (formatted for readability):
+The refreshed page displays the updated order information.  
+The results should be similar to the following excerpt (formatted here for readability):
 +
 [source,json]
 ----
@@ -628,12 +630,13 @@ It should look like this (formatted for readability):
 
 === Searching the index for `Cherry`
 
-Let's filter our search results by one of the fields. 
-We'll search for all of the orders that are `Cherry`-flavored by searching the `OrderItemName`.
+We saw that we a search can return all of the records that the database emits, but what if we want to see just a subset?
+Let's try filtering our search results by one of the fields. 
+To do that, we'll search for all of the orders that are `Cherry`-flavored by targeting only records where the value of `OrderItemName` is set to `Cherry`.
 
 . Append the following query detail to the URL `?q=OrderItemName:Cherry` and press Enter.
 
-. The query returns cherry-flavored results that are similar to the following example (formatted here for readability):
+. The query returns results that are similar to the following excerpt (formatted here for readability):
 +
 [source,json]
 ----
@@ -674,7 +677,9 @@ We'll search for all of the orders that are `Cherry`-flavored by searching the `
 ...
 ----
 
-As you can see now we just have *34* orders for Cherry. You can try to search for other fields on your own.
+As you can see, the search query now returns only *34* orders for the item `Cherry`. 
+
+Try using the same query pattern to search the index for other fields.
 
 Congratulations! You successfully replicated data from your legacy application to an indexing service using Red Hat Integration with Debezium, Apache Kafka, and Apache Camel!
 
