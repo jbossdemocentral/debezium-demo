@@ -127,7 +127,7 @@ image:images/openshift-db-terminal.png[Pod Terminal]
 image::images/openshift-sqlcommand.png[Query]
 
 [type=verification]
-Is there a record in the database?
+Were you able to see the data that we imported into the database from the CSV file?
 
 [type=verificationFail]
 {standard-fail-text}
@@ -190,7 +190,7 @@ image::images/tooling-topology.png[Tooling, role="integr8ly-img-responsive"]
 +
 image::images/tooling-terminal.png[Tooling terminal, role="integr8ly-img-responsive"]
 
-. Enter the following command to read the events in the `orders` topic:
+. Enter the following command to view the events in the `orders` topic:
 +
 [source,bash,subs="attributes+"]
 ----
