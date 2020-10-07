@@ -9,23 +9,39 @@
 
 // attributes
 :title: Introducing Debezium
-:standard-fail-text: Verify that you followed all the steps. If you continue to have issues, contact your administrator.
+:standard-fail-text: Verify that you followed all the steps. If you continue to have problems, contact your administrator.
 
 // id syntax is used here for the custom IDs
 [id='debezium-basic-demo']
 = {title}
 
 // Description text for the Solution Pattern.
-This tutorial demonstrates how to use Debezium to monitor a MySQL database. As the data in the database changes, you will see the resulting event in AMQ streams.
+This tutorial demonstrates how to use Debezium to capture updates from a MySQL database. 
+As the data in the database changes, we'll see that the resulting events become available in AMQ streams.
 
-// Additional introduction content.
-Debezium is a distributed platform that turns your existing databases into event streams, so applications can see and respond immediately to each row-level change in the databases.
+// Additional introduction content..
+Debezium is a set of distributed services, built on top of Apache Kafka.
+Debezium works by capturing changes that occur in database tables, and sending them to Kafka.
+When a change occurs in a database, for example, as the result of a *`CREATE`*, *`DELETE`*, or *`UPDATE`* operation, Debezium consumes the change event and sends a record of it to a Kafka topic. 
+Applications, in turn, can subscribe to the Kafka topic, and read the event records, in the order in which they were generated.
+Because applications can consume event records as they become available, they can respond quickly to changes.
 
-Debezium is built on top of Apache Kafka and provides Kafka Connect compatible connectors that monitor specific database management systems. Debezium records the history of data changes in Kafka logs, from where your application consumes them. This makes it possible for your application to easily consume all of the events correctly and completely. Even if your application stops unexpectedly, it will not miss anything: when the application restarts, it will resume consuming the events where it left off.
+Further, because Kafka topic storage retains the history of the event records that a database table emits, applications are able to access the full history of data changes in the source database. 
+Even if the application stops unexpectedly, it does not miss changes that occur during the outage. 
+When the application restarts, it reconnects to Kafka, and resumes consuming the events from the point in the topic where it left off.
+
 
 image::images/debezium-basic.png[Debezium, role="integr8ly-img-responsive"]
 
-Debezium includes multiple connectors. In this tutorial, you will use the MySQL connector. The example database, a one node Kafka cluster and a Kafka Connect cluster with the MySQL connector are already deployed in the working namespace.
+Debezium provides a set of connectors for ingesting changes from different database management systems, including MySQL, postgreSQL, MongoDB, SQL Server, and Db2. 
+In this tutorial, we'll use the MySQL connector. 
+
+For this tutorial we'll work in the OpenShift `debezium-basic-demo` project. 
+In this project, the following resources are deployed:
+
+- An example MySQL database.
+- A single node Kafka cluster.
+- A Kafka Connect cluster with the MySQL connector.
 
 image::images/debezium-basic-topology.png[Debezium, role="integr8ly-img-responsive"]
 
@@ -41,35 +57,33 @@ image::images/debezium-basic-topology.png[Debezium, role="integr8ly-img-responsi
 [id='starting-mysql-client']
 == Starting a MySQL command line client
 
-The first step is to start a MySQL command line client in the tooling terminal so that you can access the sample `inventory` database.
+We can access the sample MySQL `inventory` database by opening a terminal window in the tooling pod, and starting a MySQL command line client.
  
-=== Access the tooling terminal
+=== Accessing the tooling terminal
 
-. Open a new browser tab and go to the link:{openshift-console-url}[topology view, window="_blank"]
-+
-[NOTE]
-====
-If you haven't done so, change from the Administrator to the Developer view on the top left menu.
-====
-
-. Click on the `tooling` pod to open the right panel and then click on the pod name.
+. From a new browser tab, open the link:{openshift-console-url}[*Topology*, window="_blank"] view of the OpenShift console.
+. If you don't see the *Topology* view, verify that you are using the `debezium-basic-demo` project.
+. From the navigation panel, switch from the *Administrator* view to the *Developer* view.
+. In the topology diagram, click the *tooling* application to open the *Pod Details* page.
+. Click the *Resources* tab, and then click the pod name, for example, `tooling-74c577f6d-8n7lv`.
 +
 image::images/tooling-topology.png[Tooling, role="integr8ly-img-responsive"]
 
-. Click on the `terminal` tab to get access to the working terminal.
+. Click the *Terminal* tab to open a shell session to the pod.
 +
 image::images/tooling-terminal.png[Tooling terminal, role="integr8ly-img-responsive"]
 
-=== Explore the database
 
-. Use the terminal to start the MySQL command line client in the container. Log into the sample `inventory` database.
+=== Exploring the database
+
+. From the shell prompt in the terminal window, enter the following command to start the MySQL command line client in the container, and log into the sample `inventory` database.
 +
 [source,bash,subs="attributes+"]
 ----
 mycli -h mysql -u mysqluser -p mysqlpw inventory
 ----
 +
-You should see output similar to the following:
+The command returns information about the MySQL CLI, as in the following example:
 +
 ----
 mysql 5.7.30-log
@@ -77,18 +91,17 @@ mycli 1.20.1
 Chat: https://gitter.im/dbcli/mycli
 Mail: https://groups.google.com/forum/#!forum/mycli-users
 Home: http://mycli.net
-Thanks to the contributor - Magnus udd
-mysql mysqluser@mysql:inventory>
+Thanks to the contributor - Ryan Smith
 ----
 
-. At the `mysql mysqluser@mysql:inventory>` command prompt, list the tables in the database:
+. At the `mysql mysqluser@mysql:inventory>` command prompt, enter the following command to list the tables in the database:
 +
-[source,bash,subs="attributes+"]
+[source,sql,subs="attributes+"]
 ----
-show tables;
+SHOW TABLES;
 ----
 +
-You will get the following output:
+The command returns the following output:
 +
 ----
 +---------------------+
@@ -105,14 +118,15 @@ You will get the following output:
 Time: 0.012s
 ----
 
-. Use the MySQL command line client to explore the database and view the pre-loaded data in the database. For example, query the `customers`:
+. Submit other SQL queries to further explore the database and view the data that it contains. 
+For example, to list all of the entries in the `customers` table, submit the following query:
 +
-[source,bash,subs="attributes+"]
+[source,sql,subs="attributes+"]
 ----
 SELECT * FROM customers;
 ----
 +
-You should see:
+The query returns the following table:
 +
 ----
 +------+------------+-----------+-----------------------+
@@ -127,6 +141,8 @@ You should see:
 4 rows in set
 Time: 0.011s
 ----
++
+After you're done exploring the database, leave the MySQL CLI running in the terminal on this tab, so that we can come back to it later.
 
 [type=verification]
 ====
@@ -140,31 +156,43 @@ Did it work?
 // <-- START OF SOLUTION PATTERN TASKS -->
 [time=5]
 [id='view-change-events']
-== View Change Events
+== Viewing change events
 
-After the Debezium MySQL connector deploys, it starts monitoring the `inventory` database for data change events. Events are written on specific topics with the `dbserver-mysql` prefix.
+After the Debezium MySQL connector deploys, it starts to capture data change events from  the `inventory` database. Events are written to topics with names prefixed by `dbserver-mysql`.
 
-For this tutorial, you will explore the `dbserver-mysql.inventory.customers` topic. In this topic, you will see different types of change events to see how the connector captured them:
+In this tutorial, we will examine the topic `dbserver-mysql.inventory.customers`. 
+In this topic, we'll view several types of change events and see how the MySQL connector captures them.
+We'll complete the following tasks:
 
-- Viewing a create event
-- Updating the database and viewing the update event
-- Deleting a record in the database and viewing the delete event
-- Restarting Kafka Connect and changing the database
+- View a `CREATE` event.
+- Update the database and view the resulting *`UPDATE`* event.
+- Delete a record in the database and view the resulting *`DELETE`* event.
+- Restart Kafka Connect and change the database.
 
-=== Viewing a _create_ event
+=== Viewing a `CREATE` event
 
-By viewing the `dbserver-mysql.inventory.customers` topic, you can see how the MySQL connector captured _create_ events in the `inventory` database. In this case, the create events capture new customers being added to the database.
+Now let's examine a Kafka topic. To do this we'll use the `kafkacat` utility.  
+By viewing the `dbserver-mysql.inventory.customers` topic, we'll see how the MySQL connector captures *`CREATE`* events in the `inventory` database. 
+In this topic, *`CREATE`* events capture operations that add new customers to the database.
 
-. Open a new terminal, and use it to start the `kafkacat` utility to watch the `dbserver-mysql.inventory.customers` topic from the beginning of the topic.
+. Open a second OpenShift console in another tab, then navigate to the tooling pod to open a terminal window.
+.. Open the link:{openshift-console-url}[*Topology*, window="_blank"] view of the OpenShift console.
+.. From the topology diagram, click the circle for the *tooling* application to open the overview page.
+.. Click the *Resources* tab, and then click the pod name.
+.. Click the *Terminal* tab to open a shell session to the pod.
+.. Enter the following command to start the `kafkacat` utility and configure it to watch the `dbserver-mysql.inventory.customers` topic from the beginning of the topic.
 +
 [source,bash,subs="attributes+"]
 ----
 kafkacat -b demo-kafka-bootstrap:9092 -t dbserver-mysql.inventory.customers  | jq .
 ----
 +
-The `kafkacat` utility returns the event records from the `customers` table. There are four events, one for each row in the table. Each event is formatted in JSON, because that is how you configured the Kafka Connect service. There are two JSON documents for each event: one for the key, and one for the value.
+The `kafkacat` utility returns the event records from the `customers` table. 
+There are four events, one for each row in the table. 
+Each event is formatted in JSON, the default format for Kafka Connect to represent the data. 
+There are two JSON documents for each event: one for the key, and one for the value.
 +
-You should see output similar to the following:
+The command returns JSON that is similar to the following output:
 +
 ----
 {
@@ -188,15 +216,17 @@ You should see output similar to the following:
 +
 [NOTE]
 ====
-This utility keeps watching the topic, so any new events will automatically appear as long as the utility is running.
+For as long as `kafkacat` is running, it continues to watch the topic. New events appear automatically as they occur.
 ====
 
-. Review the details of the same event’s value.
+. Review the details returned for the value document of the event.
 +
-The event’s value shows that the row was created, and describes what it contains (in this case, the `id`, `first_name`, `last_name`, and `email` of the inserted row).
+The event’s _value_ shows that the row was created, and it lists the fields that the row contains. 
+In this case, the event contains the `id`, `first_name`, `last_name`, and `email` for the specified row.
 +
-Here are the details of the _value_ of the last event (formatted for readability):
+The following details are included in the _value_ document for the last event (formatted for readability):
 +
+[source,json]
 ----
 {
   "schema": {
@@ -409,10 +439,10 @@ Here are the details of the _value_ of the last event (formatted for readability
 }
 ----
 
-. Compare the event’s _key_ and _value_ schemas to the state of the `inventory` database.
+. Compare the _key_ and _value_ schemas of the event to the state of the `inventory` database by comparing them 
+to the customer table that the SQL query returned in the previous task: 
 +
 ----
-mysql mysqluser@mysql:inventory> select * from customers; 
 +------+------------+-----------+-----------------------+
 | id   | first_name | last_name | email                 |
 +------+------------+-----------+-----------------------+
@@ -421,9 +451,6 @@ mysql mysqluser@mysql:inventory> select * from customers;
 | 1003 | Edward     | Walker    | ed@walker.com         |
 | 1004 | Anne       | Kretchmar | annek@noanswer.org    |
 +------+------------+-----------+-----------------------+
-
-4 rows in set
-Time: 0.011s
 ----
 
 [type=verification]
@@ -438,27 +465,27 @@ Did it work?
 // <-- START OF SOLUTION PATTERN TASKS -->
 [time=5]
 [id='viewing-update-event']
-== Updating the database and viewing the _update_ event
+== Updating the database and viewing the `UPDATE` event
 
-Now that you have seen how the Debezium MySQL connector captured the _create_ events in the `inventory` database, you will now change one of the records and see how the connector captures it.
+Now that we have seen how the Debezium MySQL connector captured the *`CREATE`* events in the `inventory` database, let's try changing one of the records and see how the connector captures the change.
 
-=== Update a customer
+=== Updating a customer
 
-. In the terminal that is running the MySQL command line client, run the following statement:
+. Return to the terminal that is running the MySQL command line client, and enter the following SQL command:
 +
-[source,bash,subs="attributes+"]
+[source,sql,subs="attributes+"]
 ----
 UPDATE customers SET first_name='Anne Marie' WHERE id=1004;
 ----
 
 . View the updated `customers` table::
 +
-[source,bash,subs="attributes+"]
+[source,sql,subs="attributes+"]
 ----
 SELECT * FROM customers;
 ----
 +
-You should get the updated version:
+The table entries are updated, as in the following example:
 +
 ----
 +------+------------+-----------+-----------------------+
@@ -474,23 +501,28 @@ You should get the updated version:
 Time: 0.011s
 ----
 
-=== Review the kafka record
+=== Reviewing the Kafka record
 
-. Switch back to the terminal running `kafkacat` and re-run the last command (press Ctrl + C to stop the current one):
+. Switch back to the terminal running `kafkacat`.
+. Press Ctrl+C to stop the current command.
+. Re-run the command that we ran in the preceding task:
 +
 [source,bash,subs="attributes+"]
 ----
 kafkacat -b demo-kafka-bootstrap:9092 -t dbserver-mysql.inventory.customers -e | jq .
 ----
 +
-By changing a record in the `customers` table, the Debezium MySQL connector generated a new event. You should see two new JSON documents: one for the event’s _key_, and one for the new event’s _value_.
+Because we modified a row in the `customers` table, the Debezium MySQL connector generated a new event. 
+The output from `kafkacat` shows two new JSON documents: one for the event’s _key_, and one for the new event’s _value_.
 +
-Here is that new event’s _value_. There are no changes in the `schema` section, so only the `payload` section is shown (formatted for readability):
+We won't spend time reviewing the `schema` section, because there are no changes there.
+But let's take a closer look at the following `payload` section in the _value_ document:
 +
+[source,json]
 ----
 ...
   "payload": {
-    "before": {
+    "before": { <1>
       "id": 1004,
       "first_name": "Anne",
       "last_name": "Kretchmar",
@@ -525,17 +557,15 @@ Here is that new event’s _value_. There are no changes in the `schema` section
 }
 ----
 +
-[NOTE]
-====
-The `before` field now has the state of the row with the values _before_ the database commit.
-====
+<1> Recall that in the previous task, the value in the `before` field was `null`. 
+Now, because we updated the row, the `before` field shows the previous state of that row, that is, the original value of `Ann Kretchmar`.
 
-By viewing the `payload` section, you can learn several important things about the _update_ event:
+By viewing the preceding `payload` section, we can learn several important things about the *`UPDATE`* event:
 
-- By comparing the `before` and `after` structures, you can determine what actually changed in the affected row because of the commit.
-- By reviewing the `source` structure, you can find information about MySQL’s record of the change (providing traceability).
-- By comparing the `payload` section of an event to other events in the same topic (or a different topic), you can determine whether the event occurred before, after, or as part of the same MySQL commit as another event.
-
+- By comparing the `before` and `after` structures, we can determine what actually changed in the affected row because of the commit.
+- By reviewing the `source` structure, we can find information about MySQL’s record of the change (providing traceability).
+- By comparing the `payload` section of an event to other events in the same topic (or a different topic), we can determine whether the event occurred before, after, or as part of the same MySQL commit as another event.
+//What are we comparing? The timestamp?
 [type=verification]
 ====
 Did it work?
@@ -548,30 +578,30 @@ Did it work?
 // <-- START OF SOLUTION PATTERN TASKS -->
 [time=5]
 [id='viewing-delete-event']
-== Deleting a record in the database and viewing the _delete_ event
+== Deleting a record in the database and viewing the `DELETE` event
 
-Now that you have seen how the Debezium MySQL connector captured the _create_ and _update_ events in the `inventory` database, you will now delete one of the records and see how the connector captures it.
+Now that we've seen how the Debezium MySQL connector captures *`CREATE`* and *`UPDATE`* events in the `inventory` database, let's delete a record and see how the connector captures it.
 
-=== Delete a customer and addresses
+=== Deleting a customer and addresses
 
-. In the terminal that is running the MySQL command line client, run the following statements:
+. In the terminal that is running the MySQL command line client, enter the following SQL queries, and type `y` to confirm the operations:
 +
-[source,bash,subs="attributes+"]
+[source,sql,subs="attributes+"]
 ----
 DELETE FROM addresses WHERE customer_id=1004;
 DELETE FROM customers WHERE id=1004;
 ----
 +
-[NOTE]
-====
-You will need to type `y` to proceed for each statement.
-====
-+
-By deleting a row in the `customers` table, the Debezium MySQL connector generated two new events.
+After the rows are deleted from the `customers` table, the Debezium MySQL connector generates two new events:
 
-=== Review the kafka record
+* A record that represents the *`DELETE`* operation (`op : d`), the `before` row data, and some other fields.
+* A _tombstone_ record that has the same key as the deleted row, and a value of null. 
+This record is a marker for Apache Kafka. 
+It indicates that log compaction can remove all records that have this key.
 
-. Switch back to the terminal running `kafkacat` and the following command:
+=== Reviewing the Kafka record
+
+. Return to the terminal that is running `kafkacat`, and enter the following command:
 +
 [source,bash,subs="attributes+"]
 ----
@@ -580,13 +610,14 @@ kafkacat -b demo-kafka-bootstrap:9092 -t dbserver-mysql.inventory.customers -K \
 
 . Review the _value_ for the first new event.
 +
-Here are the details of the _value_ for the first new event (formatted for readability):
+The command returns data that includes the details of the _value_ for the first new event, as in the following excerpt (formatted for readability):
 +
+[source,json]
 ----
 {
 ...
   "payload": {
-    "before": {
+    "before": { <1>
       "id": 1004,
       "first_name": "Anne Marie",
       "last_name": "Kretchmar",
@@ -616,17 +647,18 @@ Here are the details of the _value_ for the first new event (formatted for reada
 }
 ----
 +
-[NOTE]
-====
-The `before` field now has the state of the row that was deleted with the database commit.
+<1> The `before` field shows the state of the row that we deleted, before we committed the deletion.
+<2> The `after` field shows a null value. 
 
-This event provides a consumer with the information that it needs to process the removal of the row. The old values are also provided, because some consumers might require them to properly handle the removal.
-====
+The *`DELETE`* event provides topic consumers with the information that they need to process the removal of the row. 
+Debezium provides the previous values, because some consumers require them to process the removal.
+
 
 . Review the _key_ and _value_ for the second new event.
 +
-Here is the _key_ for the second new event (formatted for readability):
+Here is the _key_ for the second new event, formatted for readability:
 +
+[source,json]
 ----
 {
   "schema": {
@@ -647,10 +679,13 @@ Here is the _key_ for the second new event (formatted for readability):
 }
 ----
 +
-[NOTE]
-Did you noticed that this time there is no message payload?
+=== No message payload
 
-If Kafka is set up to be _log compacted_, it will remove older messages from the topic if there is at least one message later in the topic with same key. This last event is called a _tombstone_ event, because it has a key and an empty value. This means that Kafka will remove all prior messages with the same key. Even though the prior messages will be removed, the tombstone event means that consumers can still read the topic from the beginning and not miss any events.
+If we configure Kafka to use log compaction, it retains only the last known value for the record keys in a topic partition.
+Older topic records that have the same key are deleted. 
+For deletion events, the event record that is retained -- the last record with the key of the deleted row -- is called a _tombstone_ event.
+Tombstone events have a key and an empty payload. 
+The use of tombstone events enables consumers to read a topic from beginning to end and not miss any events, even though event records that precede the tombstone are no longer available. 
 
 [type=verification]
 ====
@@ -671,12 +706,14 @@ After completing the tutorial, consider the following next steps:
 
 - Explore the tutorial further.
 +
-Use the MySQL command line client to add, modify, and remove rows in the database tables, and see the effect on the topics. Keep in mind that you cannot remove a row that is referenced by a foreign key.
+Use the MySQL command line client to add, modify, and remove rows in the database tables. 
+What effects do the operations have on topics? 
+Keep in mind that you cannot remove rows that are referenced by foreign keys.
 
 - Plan a Debezium deployment.
 +
 ====
-You can install Debezium in OpenShift or on Red Hat Enterprise Linux. For more information, see the following:
+You can install Debezium in OpenShift or on Red Hat Enterprise Linux. For more information, see the following documentation:
 
 - link:https://access.redhat.com/documentation/en-us/red_hat_integration/2020-Q2/html-single/installing_change_data_capture_on_openshift/[Installing Debezium on OpenShift, window="_blank"]
 - link:https://access.redhat.com/documentation/en-us/red_hat_integration/2020-Q2/html-single/installing_change_data_capture_on_rhel/[Installing Debezium on RHEL, window="_blank"]
