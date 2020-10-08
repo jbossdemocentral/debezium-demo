@@ -16,7 +16,7 @@ This demo consists of a set of scenarios that you can use to demonstrate the cha
 - Red Hat Integration
   - Debezium
   - AMQ Streams
-- Apache Camel Kafka Connectors
+- Apache Camel Kafka Connect Connectors
 
 ### Duration
 
@@ -32,25 +32,28 @@ Workshop provisioning takes 60 - 75 minutes.
 
 If the workshop fails to deploy, resubmit your provisioning request. If deployment continues to fail after three attempts, open a ticket by sending a message to rhds-help@redhat.com.
 
-After your provisioning request is received, the _Red Hat Product Demo System_ sends you a series of email messages with updates about the status of the request. When your deployment is ready for use, you receive a final email that includes information about how to access the environment. 
+After your provisioning request is received, the _Red Hat Product Demo System_ sends you a series of email messages with updates about the status of the request. When your environment is ready to use, you receive a final email that includes information about how to access the environment. 
 
 ## Scenarios
 
 ### Introduction to Debezium
 
-In this introductory scenario, you use Debezium to capture data change events from a MySQL database and send change event records to Apache Kafka. You can go over the data structure for each type of event record: creates, updates, and deletes. 
+In this introductory workshop, you use Debezium to capture data change events from a MySQL database and send change event records to Apache Kafka. 
+After you complete the tasks in the workshop, you'll have a better understanding of the data structures that Debezium uses as it sends event records to Kafka for standard database operations (`CREATE`, `UPDATE`, and `DELETE`). 
 
-This is a basic demo where everything is already set up for you to go over the solution pattern from the Solution Explorer web application.
+The provisioning process for the workshop deploys the components that are used in this scenario into the **debezium-basic-demo** namespace.
+Follow the _Introducing Debezium_ script in the Solution Explorer for guidance in completing the tasks for this demo.
 
 #### Video
 
 ### Data replication
 
-The data replication scenario demonstrates how to use Debezium to avoid dual writes. In the scenario, you have a legacy enterprise application built on PHP, that sends orders and records into a database. To enable faster querying of your orders, you want to  send the records for each new order event to an Elasticsearch index. 
+The data replication scenario demonstrates how you can use Debezium to send data from your application database to another system without performing _dual writes_, that is, without making the application responsible for writing the data to two separate systems. In the scenario, a legacy enterprise application, built on PHP, sends orders and records into a database. To enable faster querying of your orders, you want to send the records for each new order event to an Elasticsearch index. 
 
-The scenario makes use of Debezium connectors and Single Message Transformations (SMTs). The second part of the demo introduces the new Camel Kafka Connectors.
+The scenario makes use of Debezium connectors and Single Message Transformations (SMTs). The second part of the demo introduces the new Apache Camel Kafka Connect Connectors.
 
-The components used in this scenario are deployed in the Solution Explorer, and are ready for you to use.
+The components that are used in this scenario are deployed into the **debezium-complete-demo** namespace. 
+Follow the _Data Replication_ script in the Solution Explorer for guidance in completing the demo tasks.
 
 #### Video
 
@@ -60,7 +63,7 @@ The components used in this scenario are deployed in the Solution Explorer, and 
 
 Use the advanced demo to explore advanced configurations and requirements for Debezium. 
 To access the environment for the advanced demo, use the **debezium-advanced-demo** OpenShift project. 
-The **debezium-advanced-demo** project has the following components deployed:
+The following components are deployed to the **debezium-advanced-demo** namespace:
 
 - A base PostgreSQL database
 <!-- - A MongoDB database !-->
