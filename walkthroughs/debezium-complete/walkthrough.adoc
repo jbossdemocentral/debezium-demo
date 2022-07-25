@@ -5,7 +5,7 @@
 
 // URLs
 //:fuse-documentation-url: https://access.redhat.com/documentation/en-us/red_hat_fuse/{fuse-version}/
-:openshift-console-url: {openshift-host}/topology/ns/debezium-complete-demo/graph
+:openshift-console-url: {openshift-host}/topology/ns/debezium-complete-demo?view=graph
 
 // attributes
 :title: Data replication
